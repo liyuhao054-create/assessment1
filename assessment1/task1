@@ -1,0 +1,110 @@
+START PROGRAM
+
+    keep_running = "yes"
+
+    // continuous loop for multiple cars
+    WHILE keep_running == "yes"
+
+        // 1. Get input from attendant
+        PRINT "Input User ID:"
+        INPUT user_id
+        PRINT "Input Plate Number:"
+        INPUT plate_no
+        PRINT "Input Member Type (First-Time, Staff, Student, Standard):"
+        INPUT m_type
+        PRINT "Input Charger (AC / DC):"
+        INPUT charger
+        PRINT "Input hours charged:"
+        INPUT hrs
+
+        PRINT "Peak hour? (Y/N)"
+        INPUT is_peak
+        PRINT "Idle? (Y/N)"
+        INPUT is_idle
+        PRINT "Eco Pass? (Y/N)"
+        INPUT is_eco
+        PRINT "Lost card? (Y/N)"
+        INPUT is_lost
+
+        // 2. Calculate gross fee
+        gross = 0
+        IF charger == "AC" THEN
+            IF hrs <= 2 THEN
+                gross = hrs * 4
+            ELSE IF hrs <= 4 THEN
+                gross = 8 + (hrs - 2) * 6
+            ELSE IF hrs <= 6 THEN
+                gross = 20 + (hrs - 4) * 8
+            ELSE
+                gross = 36 + (hrs - 6) * 12
+                IF gross > 80 THEN
+                    gross = 80 // max cap
+                END IF
+            END IF
+        END IF
+
+        IF charger == "DC" THEN
+            IF hrs <= 2 THEN
+                gross = hrs * 10
+            ELSE IF hrs <= 4 THEN
+                gross = 20 + (hrs - 2) * 15
+            ELSE IF hrs <= 6 THEN
+                gross = 50 + (hrs - 4) * 20
+            ELSE
+                gross = 90 + (hrs - 6) * 30
+                IF gross > 150 THEN
+                    gross = 150 // max cap
+                END IF
+            END IF
+        END IF
+
+        // 3. Discounts
+        discount = 0
+        IF m_type == "First-Time" THEN
+            discount = gross
+        ELSE IF m_type == "Staff" THEN
+            discount = gross * 0.5
+        ELSE IF m_type == "Student" AND charger == "AC" THEN
+            discount = gross * 0.25
+        END IF
+
+        net_amount = gross - discount
+
+        // eco pass discount
+        IF is_eco == "Y" THEN
+            net_amount = net_amount - 2
+            IF net_amount < 0 THEN
+                net_amount = 0
+            END IF
+        END IF
+
+        // 4. Surcharges
+        penalty = 0
+        IF is_peak == "Y" THEN
+            penalty = penalty + 5
+        END IF
+        IF is_idle == "Y" THEN
+            penalty = penalty + 15
+        END IF
+        IF is_lost == "Y" THEN
+            penalty = penalty + 30
+        END IF
+
+        total_pay = net_amount + penalty
+
+        // 5. Generate Bill
+        PRINT "==== EV RECEIPT ===="
+        PRINT "ID: ", user_id
+        PRINT "Plate: ", plate_no
+        PRINT "Gross: ", gross
+        PRINT "Discount: ", discount
+        PRINT "Penalty: ", penalty
+        PRINT "Total: ", total_pay
+
+        // ask to continue
+        PRINT "Do you want to check another car? (yes/no)"
+        INPUT keep_running
+
+    END WHILE
+
+END PROGRAM
